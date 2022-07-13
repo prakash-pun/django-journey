@@ -38,7 +38,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,6 +66,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
@@ -165,3 +166,4 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_SECURE": False,
     "REFRESH_TOKEN_SAMESITE": 'Lax',
 }
+

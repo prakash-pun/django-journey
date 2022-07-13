@@ -80,3 +80,5 @@ class User(CustomUser):
         self.is_superuser = True
 
         super(User, self).save(*args, **kwargs)
+
+        

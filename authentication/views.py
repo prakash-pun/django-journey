@@ -26,7 +26,7 @@ class TokenObtainView(TokenObtainPairView):
 
         res = Response(serializer.validated_data, status=status.HTTP_200_OK)
         refresh_token = serializer.validated_data['refresh']
-        access_token = serializer.validated_data['access']
+        # access_token = serializer.validated_data['access']
         get_token(request)
         res.set_cookie("refresh_token", refresh_token, max_age=settings.SIMPLE_JWT.get(
             'REFRESH_TOKEN_LIFETIME').total_seconds(), samesite='Lax', secure=False, httponly=True)
@@ -121,6 +121,7 @@ class UserView(APIView):
             return Response({"detail": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as ex:
             return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AvatarView(APIView):
     permission_classes = [permissions.AllowAny]
