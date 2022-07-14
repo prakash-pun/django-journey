@@ -1,16 +1,19 @@
 from django.conf import settings
 from django.middleware.csrf import get_token
+from rest_framework import filters
 from rest_framework import status
 from rest_framework import serializers
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .serializers import UserSerializer, MyTokenObtaionPairSerializer, CustomTokenRefreshSerializer, AvatarSerializer
+from .serializers import ChangePasswordSerializer, UserSerializer, MyTokenObtaionPairSerializer, CustomTokenRefreshSerializer, AvatarSerializer, CustomUserSerializer
+from .permissions import IsAdminPermission, IsAdminOrUserPermission, IsUserPermission
 from .models import User
-from .permissions import IsAdminPermission
 
 
 class TokenObtainView(TokenObtainPairView):
@@ -69,8 +72,51 @@ class TokenBlacklistView(APIView):
             return Response({"detail": "error occured", "error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserView(APIView):
+class CustomUserView(APIView):
     permission_classes = [IsAdminPermission]
+
+    def get(self, request):
+        try:
+            serializer = CustomUserSerializer(request.user)
+            return Response(serializer.data)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, format=None):
+        avatar = request.data.get('avatar')
+        if avatar is not None:
+            user = request.user
+            user.delete_avatar()
+        serializer = CustomUserSerializer(
+            request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def post(self, request, format='json'):
+        try:
+            serializer = CustomUserSerializer(
+                data=request.data, context={"request": request})
+            if serializer.is_valid():
+                user = serializer.save()
+                if user:
+                    json = serializer.data
+                    return Response(json, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except serializers.ValidationError as err:
+            return Response(err.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exe:
+            return Response({"detail": "Error creating user", "error": str(exe)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserView(APIView):
+    permission_classes = [IsAdminOrUserPermission]
 
     def get(self, request):
         try:
@@ -112,15 +158,43 @@ class UserView(APIView):
     def delete(self, request):
         try:
             user = request.user
-            instance = User.objects.get(id=user.pk)
-            if instance:
-                instance.delete_avatar()
-                instance.delete()
-            # user.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({"detail": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as ex:
             return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordChangeView(APIView):
+    permission_classes = [IsUserPermission]
+
+    def get(self, request):
+        instance = User.objects.filter(pk=request.user.id).last()
+        if instance is not None:
+            serializer = UserSerializer(instance)
+            return Response(serializer.data)
+        else:
+            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        serializer = ChangePasswordSerializer(
+            data=request.data, context={'request': request})
+        if serializer.is_valid():
+            if not user.check_password(serializer.data.get("old_password")):
+                return Response({"detail": "Password didn't match"}, status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(serializer.data.get("new_password"))
+            user.save()
+            return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ListUserView(ListAPIView):
+    permission_classes = [IsAdminPermission]
+    pagination_class = LimitOffsetPagination
+    search_fields = ["full_name", "email", "username"]
+    filter_backends = (filters.SearchFilter,)
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
 
 
 class AvatarView(APIView):
@@ -136,4 +210,3 @@ class AvatarView(APIView):
             return Response({"detail": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as ex:
             return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
-

@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Mero Site API",
+        title="Mero Backend API",
         default_version='v1',
         description="Mero Backend API Documentation",
         terms_of_service="https://www.google.com/policies/terms/",
@@ -23,6 +23,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('api/v1/auth/', include("authentication.urls")),
+    path('api/v1/service/', include("service.urls")),
 ]
 
 if settings.DEBUG:

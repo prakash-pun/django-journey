@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'drf_yasg',
     'authentication',
+    'service',
     # 'rest_framework_simplejwt.token_blacklist',
 ]
 

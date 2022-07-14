@@ -1,5 +1,4 @@
 from django.contrib.auth.base_user import BaseUserManager
-# from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
@@ -35,4 +34,5 @@ class CustomUserManager(BaseUserManager):
 
 class UserManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(user_type=0)
+        return super().get_queryset().filter(user_type=1)
+

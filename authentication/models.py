@@ -19,11 +19,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     user_type = models.IntegerField(
         blank=True, default=USER_TYPE[1][0], choices=USER_TYPE)
     avatar = models.ImageField(
-        upload_to='admin/avatar/', default=DEFAULT_AVATAR, blank=True)
+        upload_to='profile_avatar/avatar/', default=DEFAULT_AVATAR, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     email_verified = models.BooleanField(
-        default=False, verbose_name='email_verified')
+        default=True, verbose_name='email_verified')
+    last_login = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
@@ -68,6 +69,7 @@ class User(CustomUser):
     location = models.CharField(max_length=200, null=True, blank=True)
     website = models.CharField(max_length=100, null=True, blank=True)
     github_username = models.CharField(max_length=100, null=True, blank=True)
+    linkedln_username = models.CharField(max_length=100, null=True, blank=True)
 
     objects = UserManager()
 
@@ -75,10 +77,10 @@ class User(CustomUser):
         verbose_name_plural = "Users"
 
     def save(self, *args, **kwargs):
-        self.user_type = 0
-        self.is_staff = True
-        self.is_superuser = True
+        self.user_type = 1
+        self.is_staff = False
+        self.is_superuser = False
+        self.is_active = True
 
         super(User, self).save(*args, **kwargs)
 
-        
