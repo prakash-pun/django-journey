@@ -2,9 +2,10 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework.response import Response
-from .serializers import TeamSerializer, TeamMemberSerializer
+from rest_framework.pagination import LimitOffsetPagination
+from .serializers import CountdownSerializer, TeamSerializer, TeamMemberSerializer
 from authentication.permissions import IsUserPermission, UserPermission
-from .models import Team, TeamMember
+from .models import Countdown, Team, TeamMember
 
 
 class TeamListView(ListAPIView):
@@ -16,7 +17,7 @@ class TeamListView(ListAPIView):
         return Team.objects.filter(owner__username=username)
 
 
-class TeamCreateView(ListCreateAPIView):
+class TeamCreateView(CreateAPIView):
     serializer_class = TeamSerializer
     permission_classes = [IsUserPermission]
 
@@ -72,3 +73,22 @@ class TeamMemberDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         slug = self.kwargs.get('slug', None)
         return TeamMember.objects.filter(team__slug=slug)
+
+
+class CountdownListCreateView(ListCreateAPIView):
+    serializer_class = CountdownSerializer
+    permission_classes = [IsUserPermission]
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        id = self.request.user.id
+        return Countdown.objects.filter(owner=id)
+
+
+class CountdownDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = CountdownSerializer
+    permission_classes = [IsUserPermission]
+
+    def get_queryset(self):
+        id = self.request.user.id
+        return Countdown.objects.filter(owner=id)

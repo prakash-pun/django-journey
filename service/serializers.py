@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core import settings
-from service.models import Team, TeamMember
+from service.models import Team, TeamMember, Countdown
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):
@@ -35,6 +35,21 @@ class TeamSerializer(serializers.ModelSerializer):
     def get_avatar(self, instance):
         image = instance.avatar
         return self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(image))
+
+
+class CountdownSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Countdown
+        fields = '__all__'
+        extra_kwargs = {'slug': {'read_only': True}}
+
+    def create(self, validated_data):
+        request = self.context['request']
+        owner = request.user
+        validated_data['owner'] = owner
+        return super().create(validated_data)
+
 
 
 
