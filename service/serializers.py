@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from core import settings
 from service.models import Team, TeamMember, Countdown
@@ -38,19 +39,21 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 class CountdownSerializer(serializers.ModelSerializer):
+    date_time = serializers.DateTimeField()
 
     class Meta:
         model = Countdown
         fields = '__all__'
         extra_kwargs = {'slug': {'read_only': True}}
 
+    def validate_date_time(self, data):
+        if data < timezone.now():
+            raise serializers.ValidationError("Date must be greater than current date time.")
+        return data
+
     def create(self, validated_data):
         request = self.context['request']
         owner = request.user
         validated_data['owner'] = owner
         return super().create(validated_data)
-
-
-
-
 
