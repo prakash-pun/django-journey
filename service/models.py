@@ -72,9 +72,11 @@ class Countdown(models.Model):
     )
     countdown_name = models.CharField(max_length=255, null=False)
     slug = models.SlugField(null=False, unique=True, blank=True, max_length=200)
-    date = models.DateField(null=False)
-    time = models.TimeField(null=False)
+    description = models.CharField(max_length=5000, null=True, blank=True)
+    emoji = models.CharField(max_length=100, null=True, blank=True)
+    date_time = models.DateTimeField(null=False)
     countdown_timezone = models.CharField(max_length=50, null=True)
+    position = models.PositiveIntegerField(null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
     
