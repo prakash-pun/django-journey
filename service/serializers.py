@@ -57,3 +57,12 @@ class CountdownSerializer(serializers.ModelSerializer):
         validated_data['owner'] = owner
         return super().create(validated_data)
 
+
+class LinkViewSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField()
+    image = serializers.CharField()
+    favicon = serializers.CharField()
+    sitename = serializers.CharField()
+    color = serializers.CharField()
+    url = serializers.CharField()
