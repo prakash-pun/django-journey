@@ -1,9 +1,16 @@
+import requests
+from bs4 import BeautifulSoup
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView
+from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
-from .serializers import CountdownSerializer, TeamSerializer, TeamMemberSerializer
+
+from service.utils import scrape_page_metadata
+from .serializers import CountdownSerializer, TeamSerializer, TeamMemberSerializer, LinkViewSerializer
 from authentication.permissions import IsUserPermission, UserPermission
 from .models import Countdown, Team, TeamMember
 
@@ -92,3 +99,21 @@ class CountdownDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         id = self.request.user.id
         return Countdown.objects.filter(owner=id)
+
+
+class LinkView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        URL = request.GET.get('url')
+        if URL:
+            validate = URLValidator()
+            try:
+                validate(URL)
+                metadata = scrape_page_metadata(URL)
+                serializer = LinkViewSerializer(metadata)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except ValidationError as ex:
+                return Response({"detail": ex.message}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "URL not found"}, status=status.HTTP_400_BAD_REQUEST)
+

@@ -62,7 +62,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, instance):
         image = instance.avatar
-        print(image)
         return self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(image))
 
     def update(self, instance, validated_data):
