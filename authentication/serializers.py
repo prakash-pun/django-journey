@@ -111,6 +111,19 @@ class AvatarSerializer(serializers.Serializer):
         fields = ("avatar", )
 
 
+class NewPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(required=True, min_length=8)
+    confirm_new_password = serializers.CharField(required=True)
+
+    def validate(self, value):
+        new_password = value.get('new_password', '')
+        confirm_new_password = value.get('confirm_new_password', '')
+        if new_password != confirm_new_password:
+            raise serializers.ValidationError(
+                {"detail": "New Password Didn't match"})
+        return value
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, min_length=8)
@@ -140,3 +153,20 @@ class ConfirmPasswordSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise serializers.ValidationError({"detail": "Password didn't match"})
         return value
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True, min_length=5)
+
+    class Meta:
+        fields = ['email']
+
+    def validate(self, value):
+        try:
+            email = value.get('email', '')
+            if not email:
+                raise serializers.ValidationError(
+                    {"detail": "Email not found"})
+            return value
+        except Exception as ex:
+            pass
