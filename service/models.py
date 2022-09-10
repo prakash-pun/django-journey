@@ -13,6 +13,7 @@ class Team(models.Model):
     )
     slug = models.SlugField(null=False, unique=True, blank=True, max_length=200)
     description = models.CharField(max_length=5000, null=True, blank=True)
+    website = models.URLField(blank=True, max_length=200)
     status = models.BooleanField(default=True)  # Public status
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)

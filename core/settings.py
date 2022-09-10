@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'authentication',
     'service',
+    'notes',
     # 'rest_framework_simplejwt.token_blacklist',
 ]
 
@@ -141,10 +142,11 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
     "https://www.neporganic.com",
     "https://prakashpun.com.np",
 ]
-
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
