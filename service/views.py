@@ -1,14 +1,14 @@
-import requests
-from bs4 import BeautifulSoup
+from email import message
 from django.core.validators import URLValidator
+from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView, CreateAPIView
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
-
 from service.utils import scrape_page_metadata
 from .serializers import CountdownSerializer, TeamSerializer, TeamMemberSerializer, LinkViewSerializer
 from authentication.permissions import IsUserPermission, UserPermission
@@ -17,11 +17,15 @@ from .models import Countdown, Team, TeamMember
 
 class TeamListView(ListAPIView):
     serializer_class = TeamSerializer
-    permission_classes = [permissions.AllowAny]
+    search_fields = ['team_name', 'slug']
+    filterset_fields = ["status"]
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend) 
+    permission_classes = [IsUserPermission]
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        username = self.kwargs.get('slug', None)
-        return Team.objects.filter(owner__username=username)
+        id = self.request.user.id
+        return Team.objects.filter(owner=2)
 
 
 class TeamCreateView(CreateAPIView):
@@ -51,15 +55,20 @@ class TeamDetailView(RetrieveUpdateDestroyAPIView):
 class TeamMemberListCreateView(ListCreateAPIView):
     serializer_class = TeamMemberSerializer
     permission_classes = [IsUserPermission]
+    search_fields = ["member_name", "position"]
+    pagination_class = LimitOffsetPagination
+    lookup_field="slug"
 
     def get_queryset(self):
         slug = self.kwargs.get('slug', None)
-        return TeamMember.objects.filter(team__slug=slug)
+        team = get_object_or_404(Team, slug=slug)
+        if team:
+            return TeamMember.objects.filter(team__slug=slug)
 
     def post(self, request, *args, **kwargs):
         slug = self.kwargs.get('slug', None)
         try:
-            team = Team.objects.get(slug=slug)
+            team = Team.objects.filter(slug=slug)
             if team:
                 serializer = TeamMemberSerializer(
                 data=request.data, context={"request": request, "team": team})
@@ -78,13 +87,14 @@ class TeamMemberDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsUserPermission]
 
     def get_queryset(self):
-        slug = self.kwargs.get('slug', None)
-        return TeamMember.objects.filter(team__slug=slug)
+        id = self.kwargs.get('pk', None)
+        return TeamMember.objects.filter(pk=id)
 
 
 class CountdownListCreateView(ListCreateAPIView):
     serializer_class = CountdownSerializer
     permission_classes = [IsUserPermission]
+    search_fields = ["countdown_name", "slug"]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
