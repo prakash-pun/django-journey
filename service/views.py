@@ -1,4 +1,3 @@
-from email import message
 from django.core.validators import URLValidator
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
@@ -19,13 +18,13 @@ class TeamListView(ListAPIView):
     serializer_class = TeamSerializer
     search_fields = ['team_name', 'slug']
     filterset_fields = ["status"]
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend) 
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     permission_classes = [IsUserPermission]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         id = self.request.user.id
-        return Team.objects.filter(owner=2)
+        return Team.objects.filter(owner=id)
 
 
 class TeamCreateView(CreateAPIView):
@@ -45,7 +44,7 @@ class TeamCreateView(CreateAPIView):
 class TeamDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = TeamSerializer
     permission_classes = [UserPermission]
-    lookup_field="slug"
+    lookup_field = "slug"
 
     def get_queryset(self):
         slug = self.kwargs.get('slug', None)
@@ -57,7 +56,7 @@ class TeamMemberListCreateView(ListCreateAPIView):
     permission_classes = [IsUserPermission]
     search_fields = ["member_name", "position"]
     pagination_class = LimitOffsetPagination
-    lookup_field="slug"
+    lookup_field = "slug"
 
     def get_queryset(self):
         slug = self.kwargs.get('slug', None)
@@ -68,13 +67,13 @@ class TeamMemberListCreateView(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         slug = self.kwargs.get('slug', None)
         try:
-            team = Team.objects.filter(slug=slug)
+            team = Team.objects.get(slug=slug)
             if team:
                 serializer = TeamMemberSerializer(
-                data=request.data, context={"request": request, "team": team})
+                    data=request.data, context={"request": request, "team": team})
                 if serializer.is_valid():
-                    note = serializer.save()
-                    if note:
+                    data = serializer.save()
+                    if data:
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response({"detail": "Team Not Found"}, status=status.HTTP_404_NOT_FOUND)
@@ -89,6 +88,15 @@ class TeamMemberDetailView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         id = self.kwargs.get('pk', None)
         return TeamMember.objects.filter(pk=id)
+
+    def patch(self, request, *args, **kwargs):
+        avatar = request.data.get('avatar')
+        if avatar is not None:
+            id = self.kwargs.get('pk', None)
+            team_member = TeamMember.objects.get(id=id)
+            if team_member:
+                team_member.delete_avatar()
+        return super().patch(request, *args, **kwargs)
 
 
 class CountdownListCreateView(ListCreateAPIView):
@@ -126,4 +134,3 @@ class LinkView(APIView):
             except ValidationError as ex:
                 return Response({"detail": ex.message}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "URL not found"}, status=status.HTTP_400_BAD_REQUEST)
-

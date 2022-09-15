@@ -11,7 +11,8 @@ class Team(models.Model):
     owner = models.ForeignKey(
         CustomUser, on_delete=models.SET_NULL, blank=True, null=True, related_name="team_owner"
     )
-    slug = models.SlugField(null=False, unique=True, blank=True, max_length=200)
+    slug = models.SlugField(null=False, unique=True,
+                            blank=True, max_length=200)
     description = models.CharField(max_length=5000, null=True, blank=True)
     website = models.URLField(blank=True, max_length=200)
     status = models.BooleanField(default=True)  # Public status
@@ -36,9 +37,9 @@ class Team(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             val = self.team_name
-            while(True):
+            while (True):
                 test = slugify(val)
-                if(self.__class__.objects.filter(slug=test).count() == 0):
+                if (self.__class__.objects.filter(slug=test).count() == 0):
                     break
                 val = self.team_name + str(random.randint(1, 500))
             self.slug = test
@@ -46,7 +47,8 @@ class Team(models.Model):
 
 
 class TeamMember(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True, related_name="team_member")
+    team = models.ForeignKey(Team, on_delete=models.CASCADE,
+                             blank=True, null=True, related_name="team_member")
     member_name = models.CharField(max_length=255, null=False)
     avatar = models.ImageField(
         upload_to='team/avatar/', default=DEFAULT_AVATAR, blank=True)
@@ -56,7 +58,7 @@ class TeamMember(models.Model):
     linkedln_username = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
-    
+
     @property
     def team_name(self):
         "Returns the team name."
@@ -66,13 +68,19 @@ class TeamMember(models.Model):
     def __str__(self):
         return f"{self.member_name} of team"
 
+    def delete_avatar(self):
+        img_file = self.avatar
+        if not img_file.name == DEFAULT_AVATAR:
+            img_file.delete()
+
 
 class Countdown(models.Model):
     owner = models.ForeignKey(
         CustomUser, on_delete=models.SET_NULL, blank=True, null=True, related_name="owner"
     )
     countdown_name = models.CharField(max_length=255, null=False)
-    slug = models.SlugField(null=False, unique=True, blank=True, max_length=200)
+    slug = models.SlugField(null=False, unique=True,
+                            blank=True, max_length=200)
     description = models.CharField(max_length=5000, null=True, blank=True)
     emoji = models.CharField(max_length=100, null=True, blank=True)
     date_time = models.DateTimeField(null=False)
@@ -80,16 +88,16 @@ class Countdown(models.Model):
     position = models.PositiveIntegerField(null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
-    
+
     def __str__(self):
         return self.countdown_name
 
     def save(self, *args, **kwargs):
         if not self.slug:
             val = self.countdown_name
-            while(True):
+            while (True):
                 test = slugify(val)
-                if(self.__class__.objects.filter(slug=test).count() == 0):
+                if (self.__class__.objects.filter(slug=test).count() == 0):
                     break
                 val = self.countdown_name + str(random.randint(1, 500))
             self.slug = test
