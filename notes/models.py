@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.db.models.signals import pre_save 
+from django.db.models.signals import pre_save
 from authentication.constants import DEFAULT_AVATAR
 from authentication.models import CustomUser
 from .utils import unique_slug_generator
@@ -16,13 +16,10 @@ class Notes(models.Model):
     slug = models.SlugField(
         null=False, blank=True, unique=True, max_length=255
     )
-    sub_title = models.CharField(max_length=500)
-    note_image = models.ImageField(
-        _("Image"), upload_to='notes/', default='notes/default.jpg'
-    )
+    sub_title = models.CharField(max_length=500, blank=True, null=True)
     tags = models.CharField(max_length=350, blank=True, null=True)
-    content = models.TextField(max_length=10000, blank=True)
-    is_public = models.BooleanField(default=True)
+    content = models.TextField(max_length=40000, blank=True)
+    is_public = models.BooleanField(default=False)
     is_draft = models.BooleanField(default=True)
     owner = models.ForeignKey(
         CustomUser, on_delete=models.SET_NULL, blank=True, null=True, related_name="note_owner"
@@ -51,9 +48,10 @@ class Notes(models.Model):
 
 class Images(models.Model):
     notes = models.ForeignKey(
-        Notes, related_name="note_images", on_delete=models.CASCADE
+        Notes, related_name="note_images", on_delete=models.CASCADE, blank=True, null=True,
     )
-    note_images = models.ImageField(_("Note_Images"), upload_to="notes/")
+    note_image = models.ImageField(
+        _("Note_Images"), upload_to="notes/", null=False)
     tags = models.CharField(max_length=350, blank=True, null=True)
     description = models.CharField(max_length=300, blank=True, null=True)
 
@@ -63,9 +61,14 @@ class Images(models.Model):
     class Meta:
         verbose_name_plural = "Images"
 
+    def delete_image(self):
+        image_file = self.note_image
+        if image_file and not image_file.name == "notes/default.jpg":
+            image_file.delete()
+
     def delete(self):
-        image_file = self.note_images
-        if(image_file and not image_file.name == "notes/default.jpg"):
+        image_file = self.note_image
+        if (image_file and not image_file.name == "notes/default.jpg"):
             image_file.delete()
         super().delete()
 

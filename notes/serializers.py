@@ -8,6 +8,11 @@ class ImageSerializer(serializers.ModelSerializer):
         model = Images
         fields = '__all__'
 
+    def create(self, validated_data):
+        note = self.context['note']
+        validated_data['notes'] = note
+        return super().create(validated_data)
+
 
 class NoteSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
