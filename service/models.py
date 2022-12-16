@@ -102,3 +102,47 @@ class Countdown(models.Model):
                 val = self.countdown_name + str(random.randint(1, 500))
             self.slug = test
         return super().save(*args, **kwargs)
+
+
+class ProjectShowcase(models.Model):
+    project_name = models.CharField(max_length=100, null=False)
+    description = models.CharField(max_length=1000, null=True, blank=True)
+    slug = models.SlugField(null=False, blank=True,
+                            unique=True, max_length=200)
+    project_url = models.URLField(max_length=200, blank=False)
+    cover_image = models.ImageField(
+        upload_to='projects/', default=DEFAULT_AVATAR, blank=True)
+    completition_date = models.DateField(blank=True, null=True)
+    tech_stack = models.CharField(max_length=400, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.project_name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            val = self.project_name
+            while (True):
+                unique_name = slugify(val)
+                if (self.__class__.objects.filter(slug=unique_name).count() == 0):
+                    break
+                val = self.project_name + str(random.randint(1, 500))
+            self.slug = unique_name
+        return super().save(*args, **kwargs)
+
+
+# [
+# 	{
+# 		"id": 1,
+# 		"project_name": "Courier Delivery (Fast Drop)",
+# 		"description": "A courier delivery project for picking and droping courier from one place to another.",
+# 		"slug": "courier-delivery-fast-drop",
+# 		"project_url": "https://fastdroppro.herokuapp.com/",
+# 		"cover_image": "http://localhost:8000/media/default/defaultAvatar.png",
+# 		"completition_date": "2021-11-10",
+# 		"tech_stack": "django,django_channels,celery,HTML,CSS,JavaScript",
+# 		"created_at": "2022-12-16T21:49:02.004880+05:45",
+# 		"updated_at": "2022-12-16T21:49:02.004880+05:45"
+# 	}
+# ]
