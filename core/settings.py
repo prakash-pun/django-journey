@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'authentication',
     'service',
     'notes',
-    # 'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -177,4 +177,3 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_SECURE": False,
     "REFRESH_TOKEN_SAMESITE": 'Lax',
 }
-

@@ -9,9 +9,9 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 from service.utils import scrape_page_metadata
-from .serializers import CountdownSerializer, TeamSerializer, TeamMemberSerializer, LinkViewSerializer
+from .serializers import CountdownSerializer, TeamSerializer, TeamMemberSerializer, LinkViewSerializer, ProjectSerializer
 from authentication.permissions import IsUserPermission, UserPermission
-from .models import Countdown, Team, TeamMember
+from .models import Countdown, Team, TeamMember, ProjectShowcase
 
 
 class TeamListView(ListAPIView):
@@ -134,3 +134,21 @@ class LinkView(APIView):
             except ValidationError as ex:
                 return Response({"detail": ex.message}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "URL not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProjectListCreateView(ListCreateAPIView):
+    permission_classes = [UserPermission]
+    search_fields = ["project_name", "slug"]
+    serializer_class = ProjectSerializer
+    pagination_class = LimitOffsetPagination
+    queryset = ProjectShowcase.objects.all()
+
+
+class ProjectDetailView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [UserPermission]
+    serializer_class = ProjectSerializer
+    pagination_class = LimitOffsetPagination
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return ProjectShowcase.objects.all()

@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 from core import settings
-from service.models import Team, TeamMember, Countdown
+from service.models import Team, TeamMember, Countdown, ProjectShowcase
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):
@@ -20,7 +20,8 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     owner_name = serializers.ReadOnlyField()
-    team_members = TeamMemberSerializer(many=True, read_only=True, source='team_member')
+    team_members = TeamMemberSerializer(
+        many=True, read_only=True, source='team_member')
 
     class Meta:
         model = Team
@@ -48,7 +49,8 @@ class CountdownSerializer(serializers.ModelSerializer):
 
     def validate_date_time(self, data):
         if data < timezone.now():
-            raise serializers.ValidationError("Date must be greater than current date time.")
+            raise serializers.ValidationError(
+                "Date must be greater than current date time.")
         return data
 
     def create(self, validated_data):
@@ -66,3 +68,9 @@ class LinkViewSerializer(serializers.Serializer):
     sitename = serializers.CharField()
     color = serializers.CharField()
     url = serializers.CharField()
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectShowcase
+        fields = '__all__'

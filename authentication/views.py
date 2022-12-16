@@ -211,7 +211,8 @@ class UserView(APIView):
             user = request.user
             instance = User.objects.get(id=user.pk)
             if instance:
-                serializer = UserSerializer(instance, context={'request': request})
+                serializer = UserSerializer(
+                    instance, context={'request': request})
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response({"detail": "Not Found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as ex:
@@ -250,8 +251,6 @@ class UserView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as ex:
             return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class ListUserView(ListAPIView):
