@@ -1,6 +1,8 @@
+import random
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.template.defaultfilters import slugify
 from django.db.models.signals import pre_save
 from authentication.constants import DEFAULT_AVATAR, DEFAULT_COVER_IMAGE
 from authentication.models import CustomUser
@@ -20,9 +22,9 @@ class Post(models.Model):
         upload_to='posts/', default=DEFAULT_COVER_IMAGE, blank=True)
     icon = models.CharField(max_length=200, null=True, blank=True)
     content = models.CharField(max_length=40000, null=True, blank=True)
-    created_by = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, blank=True, null=True, related_name="post_created_by")
     public = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        CustomUser, on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
@@ -30,7 +32,7 @@ class Post(models.Model):
         return self.name
 
     @property
-    def created_by(self):
+    def avatar(self):
         if self.created_by:
             return self.created_by.avatar
         return DEFAULT_AVATAR
@@ -38,11 +40,22 @@ class Post(models.Model):
     @property
     def owner_name(self):
         if self.created_by:
-            return self.created_by.first_name
+            return self.created_by.full_name
         return "Unknown"
 
     class Meta:
         verbose_name_plural = "Posts"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            value = self.name
+            while (True):
+                slug = slugify(value)
+                if (self.__class__.objects.filter(slug=slug).count() == 0):
+                    break
+                value = self.name + str(random.randint(1, 500))
+            self.slug = slug
+        return super().save(*args, **kwargs)
 
 
 class SubPost(models.Model):
@@ -79,7 +92,7 @@ class SubPost(models.Model):
     @property
     def owner_name(self):
         if self.created_by:
-            return self.created_by.first_name
+            return self.created_by.full_name
         return "Unknown"
 
     def __str__(self):
@@ -121,5 +134,4 @@ def slug_generator(sender, instance, *args, **kwargs):
         instance.slug = unique_slug_generator(instance)
 
 
-pre_save.connect(slug_generator, sender=Post)
 pre_save.connect(slug_generator, sender=SubPost)

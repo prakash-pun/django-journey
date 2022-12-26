@@ -47,8 +47,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'email',
-                    'password', 'user_type', 'avatar', 'is_active', 'email_verified', 'last_login']
+        fields = ['full_name', 'username', 'email',
+                  'password', 'user_type', 'avatar', 'is_active', 'email_verified', 'last_login']
         extra_kwargs = {'password': {'write_only': True}, 'is_staff': {
             'write_only': True}, 'email_verified': {'read_only': True}}
 
@@ -79,10 +79,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['full_name', 'username', 'email', 'password', 'user_type', 'avatar', 'bio', 'location', 'website', 'github_username', 'is_active', 'linkedln_username','email_verified', 'created_at', "updated_at"]
+        fields = ['full_name', 'username', 'email', 'password', 'user_type', 'avatar', 'bio', 'location', 'website',
+                  'github_username', 'is_active', 'linkedln_username', 'email_verified', 'created_at', "updated_at"]
         extra_kwargs = {'password': {'write_only': True}, 'is_staff': {
             'write_only': True}, 'email_verified': {'read_only': True}}
-
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -96,9 +96,8 @@ class UserSerializer(serializers.ModelSerializer):
         image = instance.avatar
         return self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(image))
 
-
     def update(self, instance, validated_data):
-        if('password' in [x for x in validated_data]):
+        if ('password' in [x for x in validated_data]):
             validated_data.pop('password')
         return super().update(instance, validated_data)
 
@@ -147,11 +146,12 @@ class ConfirmPasswordSerializer(serializers.Serializer):
     def validate(self, value):
         password = value.get('password', '')
         request = self.context.get('request')
-        user= request.user
+        user = request.user
         if not password:
             raise serializers.ValidationError({"detail": "Password Not Found"})
         if not user.check_password(password):
-            raise serializers.ValidationError({"detail": "Password didn't match"})
+            raise serializers.ValidationError(
+                {"detail": "Password didn't match"})
         return value
 
 

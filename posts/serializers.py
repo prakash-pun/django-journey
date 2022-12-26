@@ -1,11 +1,11 @@
 from django.conf import settings
 from rest_framework import serializers
-from .models import Images, SubPost, Post
+from .models import Images, Post, SubPost
 
 
 class PostSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
-    created_by = serializers.ReadOnlyField()
+    owner_name = serializers.ReadOnlyField()
 
     class Meta:
         model = Post
@@ -28,15 +28,15 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        note = self.context['note']
-        validated_data['subposts'] = note
+        subpost = self.context['subpost']
+        validated_data['sub_post'] = subpost
         return super().create(validated_data)
 
 
 class SubPostSerializer(serializers.ModelSerializer):
     avatar = serializers.SerializerMethodField()
     owner_name = serializers.ReadOnlyField()
-    note_images = ImageSerializer(many=True, read_only=True)
+    subpost_images = ImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = SubPost
@@ -44,8 +44,10 @@ class SubPostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context['request']
+        post = self.context['post']
         owner = request.user
-        validated_data['owner'] = owner
+        validated_data['created_by'] = owner
+        validated_data['post'] = post
         return super().create(validated_data)
 
     def get_avatar(self, instance):
