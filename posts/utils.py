@@ -23,3 +23,15 @@ def unique_slug_generator(instance, new_slug=None):
         return unique_slug_generator(instance, new_slug=new_slug)
 
     return slug
+
+
+# def get_unique_slug(sender, instance, **kwargs):
+#     num = 1
+#     slug = slugify(instance.title)
+#     unique_slug = slug
+#     while Post.objects.filter(slug=unique_slug).exists():
+#         unique_slug = '{}-{}'.format(slug, num)
+#         num += 1
+#     instance.slug=unique_slug
+
+# pre_save.connect(get_unique_slug,sender=Post)

@@ -1,20 +1,20 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework import status
 from rest_framework.response import Response
-from .serializers import ImageSerializer, NoteSerializer
+from .serializers import ImageSerializer, SubPostSerializer, PostSerializer
 from authentication.permissions import IsUserPermission
-from .models import Images, Notes
+from .models import Images, Post, SubPost
 
 
-class NoteListCreateView(ListCreateAPIView):
-    serializer_class = NoteSerializer
+class PostListCreateView(ListCreateAPIView):
+    serializer_class = PostSerializer
     permission_classes = [IsUserPermission]
 
     def get_queryset(self):
-        return Notes.objects.filter(owner=self.request.user)
+        return Post.objects.filter(owner=self.request.user)
 
     def post(self, request, *args, **kwargs):
-        serializer = NoteSerializer(
+        serializer = PostSerializer(
             data=request.data, context={"request": request})
         if serializer.is_valid():
             note = serializer.save()
@@ -23,12 +23,12 @@ class NoteListCreateView(ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class NoteDetailView(RetrieveUpdateDestroyAPIView):
-    serializer_class = NoteSerializer
+class PostDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = PostSerializer
     permission_classes = [IsUserPermission]
 
     def get_queryset(self):
-        return Notes.objects.filter(owner=self.request.user)
+        return Post.objects.filter(owner=self.request.user)
 
 
 class ImageListCreateView(ListCreateAPIView):
@@ -37,12 +37,12 @@ class ImageListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         id = self.kwargs.get('note_id', None)
-        return Images.objects.filter(notes__id=id)
+        return Images.objects.filter(sub_post__id=id)
 
     def post(self, request, *args, **kwargs):
         id = self.kwargs.get('note_id', None)
         try:
-            note = Notes.objects.get(id=id)
+            note = SubPost.objects.get(id=id)
             if note:
                 serializer = ImageSerializer(
                     data=request.data, context={"request": request, "note": note})

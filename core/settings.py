@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'authentication',
     'service',
-    'notes',
+    'posts',
     'rest_framework_simplejwt.token_blacklist',
 ]
 
