@@ -3,9 +3,51 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
-from .serializers import ImageSerializer, SubPostSerializer, PostSerializer
+from .serializers import FolderSerializer, ImageSerializer, PostSerializer
 from authentication.permissions import IsUserPermission
-from .models import Images, Post, SubPost
+from .models import Folder, Images, Post
+
+
+class FolderListCreateView(ListCreateAPIView):
+    serializer_class = FolderSerializer
+    permission_classes = [IsUserPermission]
+
+    def get_queryset(self):
+        return Folder.objects.filter(created_by=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        parent_id = request.POST.get('parent_id')
+        context = {'request': request}
+        # context['request'] = request
+        if parent_id:
+            parent_folder = get_object_or_404(Folder, id=parent_id)
+            if parent_folder is not None:
+                context['parent_folder'] = parent_folder
+                serializer = FolderSerializer(
+                    data=request.data, context=context)
+                if serializer.is_valid():
+                    data = serializer.save()
+                    if data:
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Folder not Found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            serializer = FolderSerializer(
+                data=request.data, context=context)
+            if serializer.is_valid():
+                data = serializer.save()
+                if data:
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FolderDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = FolderSerializer
+    permission_classes = [IsUserPermission]
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return Folder.objects.filter(created_by=self.request.user)
 
 
 class PostListCreateView(ListCreateAPIView):
@@ -16,13 +58,27 @@ class PostListCreateView(ListCreateAPIView):
         return Post.objects.filter(created_by=self.request.user)
 
     def post(self, request, *args, **kwargs):
-        serializer = PostSerializer(
-            data=request.data, context={"request": request})
-        if serializer.is_valid():
-            note = serializer.save()
-            if note:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        post_parent_id = request.POST.get('post_parent_id')
+        context = {'request': request}
+        if post_parent_id:
+            parent_post = get_object_or_404(Post, id=post_parent_id)
+            if parent_post is not None:
+                context['parent_post'] = parent_post
+                serializer = PostSerializer(data=request.data, context=context)
+                if serializer.is_valid():
+                    data = serializer.save()
+                    if data:
+                        return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Post not Found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            serializer = PostSerializer(
+                data=request.data, context=context)
+            if serializer.is_valid():
+                note = serializer.save()
+                if note:
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PostDetailView(RetrieveUpdateDestroyAPIView):
@@ -31,45 +87,6 @@ class PostDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Post.objects.filter(created_by=self.request.user)
-
-
-class SubPostListCreateView(ListCreateAPIView):
-    serializer_class = SubPostSerializer
-    permission_classes = [IsUserPermission]
-    search_fields = ["title", "slug"]
-    pagination_class = LimitOffsetPagination
-    lookup_field = "slug"
-
-    def get_queryset(self):
-        slug = self.kwargs.get('slug', None)
-        post = get_object_or_404(Post, slug=slug)
-        if post:
-            return SubPost.objects.filter(post__slug=slug)
-
-    def post(self, request, *args, **kwargs):
-        slug = self.kwargs.get('slug', None)
-        try:
-            post = Post.objects.get(slug=slug)
-            if post:
-                serializer = SubPostSerializer(
-                    data=request.data, context={"request": request, "post": post})
-                if serializer.is_valid():
-                    data = serializer.save()
-                    if data:
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"detail": "Post Not Found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as ex:
-            return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class SubPostDetailView(RetrieveUpdateDestroyAPIView):
-    serializer_class = SubPostSerializer
-    permission_classes = [IsUserPermission]
-
-    def get_queryset(self):
-        id = self.kwargs.get('pk', None)
-        return SubPost.objects.filter(pk=id)
 
 
 class ImageListCreateView(ListCreateAPIView):
@@ -83,16 +100,16 @@ class ImageListCreateView(ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         id = self.kwargs.get('pk', None)
         try:
-            post = SubPost.objects.get(id=id)
+            post = Post.objects.get(id=id)
             if post:
                 serializer = ImageSerializer(
-                    data=request.data, context={"request": request, "subpost": post})
+                    data=request.data, context={"request": request, "post": post})
                 if serializer.is_valid():
                     data = serializer.save()
                     if data:
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"detail": "Team Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Post Not Found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as ex:
             return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -106,10 +123,10 @@ class ImageDetailView(RetrieveUpdateDestroyAPIView):
         return Images.objects.filter(pk=id)
 
     def patch(self, request, *args, **kwargs):
-        image = request.data.get('note_image')
+        image = request.data.get('post_image')
         if image is not None:
             id = self.kwargs.get('pk', None)
-            note_image = Images.objects.get(id=id)
-            if note_image:
-                note_image.delete_image()
+            post_image = Images.objects.get(id=id)
+            if post_image:
+                post_image.delete_image()
         return super().patch(request, *args, **kwargs)
