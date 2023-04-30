@@ -1,4 +1,5 @@
 import requests
+import urllib3
 from bs4 import BeautifulSoup
 
 
@@ -11,8 +12,12 @@ def scrape_page_metadata(url):
         'Access-Control-Max-Age': '3600',
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0'
     }
-    req = requests.get(url, headers=headers)
-    html = BeautifulSoup(req.content, 'html.parser')
+    http = urllib3.PoolManager()
+
+    # req = requests.get(url, headers=headers)
+    response = http.request('GET', url)
+    # html = BeautifulSoup(req.content, 'html.parser')
+    html = BeautifulSoup(response.data, 'html.parser')
     metadata = {
         'title': get_title(html),
         'description': get_description(html),
@@ -21,7 +26,7 @@ def scrape_page_metadata(url):
         'sitename': get_site_name(html, url),
         'color': get_theme_color(html),
         'url': url
-        }
+    }
     return metadata
 
 
@@ -49,9 +54,11 @@ def get_description(html):
     if html.find("meta", property="description"):
         description = html.find("meta", property="description").get('content')
     elif html.find("meta", property="og:description"):
-        description = html.find("meta", property="og:description").get('content')
+        description = html.find(
+            "meta", property="og:description").get('content')
     elif html.find("meta", property="twitter:description"):
-        description = html.find("meta", property="twitter:description").get('content')
+        description = html.find(
+            "meta", property="twitter:description").get('content')
     elif html.find("p"):
         description = html.find("p").contents
     return description
