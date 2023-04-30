@@ -123,7 +123,7 @@ class LinkView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        URL = request.GET.get('url')
+        URL = request.GET.get('site_url')
         if URL:
             validate = URLValidator()
             try:

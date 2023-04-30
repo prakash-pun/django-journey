@@ -1,13 +1,14 @@
 from django.contrib import admin
-from .models import Notes, Images
+from .models import Folder, Images, Post
 
 
-@admin.register(Notes)
+@admin.register(Post)
 class AdminOrder(admin.ModelAdmin):
-    list_display = ['id', 'title', 'owner', 'tags']
+    list_display = ['id', 'title']
     search_fields = ['title']
-    list_filter = ['title', 'owner']
+    list_filter = ['title']
     ordering = ['created_at']
 
 
+admin.site.register(Folder)
 admin.site.register(Images)

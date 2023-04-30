@@ -130,19 +130,3 @@ class ProjectShowcase(models.Model):
                 val = self.project_name + str(random.randint(1, 500))
             self.slug = unique_name
         return super().save(*args, **kwargs)
-
-
-# [
-# 	{
-# 		"id": 1,
-# 		"project_name": "Courier Delivery (Fast Drop)",
-# 		"description": "A courier delivery project for picking and droping courier from one place to another.",
-# 		"slug": "courier-delivery-fast-drop",
-# 		"project_url": "https://fastdroppro.herokuapp.com/",
-# 		"cover_image": "http://localhost:8000/media/default/defaultAvatar.png",
-# 		"completition_date": "2021-11-10",
-# 		"tech_stack": "django,django_channels,celery,HTML,CSS,JavaScript",
-# 		"created_at": "2022-12-16T21:49:02.004880+05:45",
-# 		"updated_at": "2022-12-16T21:49:02.004880+05:45"
-# 	}
-# ]

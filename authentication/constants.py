@@ -1,2 +1,3 @@
 DEFAULT_AVATAR = "default/defaultAvatar.png"
-CLIENT_URL= "http://localhost:3000"
+DEFAULT_COVER_IMAGE = "default/cover_image.png"
+CLIENT_URL = "http://localhost:3000"
